@@ -36,8 +36,8 @@ char *auth_get_message(void) {
 
 static void send_msg(const char *msg, int fd) {
 	size_t len = strlen(msg);
-	write(fd, &len, sizeof(size_t));
-	write(fd, msg, len);
+	(void)!write(fd, &len, sizeof(size_t));
+	(void)!write(fd, msg, len);
 }
 
 static int conversation(
@@ -132,7 +132,7 @@ enum pwcheck auth_pw_check(const char *s) {
 		else if(pid == 0) {
 			close(err_pipe[PIPE_PARENT]);
 			close(out_pipe[PIPE_PARENT]);
-			freopen("/dev/null", "r", stdin);
+			(void)!freopen("/dev/null", "r", stdin);
 			auth_child(s, err_pipe, out_pipe);
 		}
 		close(err_pipe[PIPE_CHILD]);
