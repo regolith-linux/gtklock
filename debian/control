@@ -4,7 +4,7 @@ Priority: optional
 Maintainer: Soumya Ranjan Patnaik <soumyaranjan1812@gmail.com>
 Rules-Requires-Root: no
 Build-Depends:
- debhelper-compat (= 13),
+ debhelper-compat (>= 11),
  build-essential,
  libgtk-layer-shell0,
  libgtk-layer-shell-dev,
