@@ -1,0 +1,30 @@
+Source: gtklock
+Section: unknown
+Priority: optional
+Maintainer: Soumya Ranjan Patnaik <soumyaranjan1812@gmail.com>
+Rules-Requires-Root: no
+Build-Depends:
+ debhelper-compat (>= 11),
+ build-essential,
+ libgtk-layer-shell0,
+ libgtk-layer-shell-dev,
+ libpam0g-dev,
+ libgtk-3-0,
+ libgtk-3-dev,
+ gir1.2-gtklayershell-0.1,
+ libgtk-layer-shell-dev,
+ libxml2-utils,
+ scdoc
+Standards-Version: 4.6.1,
+Homepage: <https://github.com/jovanlanik/gtklock>
+
+Package: gtklock
+Architecture: any
+Depends:
+ ${misc:Depends},
+ libpam0g,
+ libgtk-layer-shell0,
+ libgtk-3-0
+Description: GTK-based lockscreen for Wayland. Works 
+  on sway and other wlroots-based compositors.
+
