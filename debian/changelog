@@ -1,3 +1,18 @@
+gtklock (2.1.0) UNRELEASED; urgency=medium
+  [ Regolith Linux ]
+  * Relax build dep for ubuntu.
+
+  [ Ken Gilmer ]
+  * debhelper-compat can't handle non-terminal version expression, fixing
+
+  [ Jovan Lanik ]
+  * Lock/Unlock commands
+  * Should build on FreeBSD
+  * Bunch of small fixes and improvements
+  * update copyright holder name to Sophie Winter
+
+ -- Soumya Ranjan Patniak <soumyaranjan1812@gmail.com>  Fri, 02 Feb 2024 05:00:19 +0530
+
 gtklock (2.0.1-1) focal; urgency=medium
 
   * Initial release
