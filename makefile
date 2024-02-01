@@ -8,7 +8,7 @@ MAJOR_VERSION := 2
 MINOR_VERSION := 1
 MICRO_VERSION := 0
 
-PREFIX = /usr/local
+PREFIX?= /usr
 SYSCONFDIR = $(PREFIX)/etc
 
 ifeq '$(shell uname)' 'Linux'
