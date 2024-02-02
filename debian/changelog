@@ -1,9 +1,6 @@
-gtklock (2.1.0) UNRELEASED; urgency=medium
+gtklock (2.1.0) focal; urgency=medium
   [ Regolith Linux ]
-  * Relax build dep for ubuntu.
-
-  [ Ken Gilmer ]
-  * debhelper-compat can't handle non-terminal version expression, fixing
+  * Relax build dep for ubuntu
 
   [ Jovan Lanik ]
   * Lock/Unlock commands
@@ -11,7 +8,7 @@ gtklock (2.1.0) UNRELEASED; urgency=medium
   * Bunch of small fixes and improvements
   * update copyright holder name to Sophie Winter
 
- -- Soumya Ranjan Patniak <soumyaranjan1812@gmail.com>  Fri, 02 Feb 2024 05:00:19 +0530
+ -- Regolith Linux <regolith.linux@gmail.com>  Thu, 01 Feb 2024 19:49:29 -0800
 
 gtklock (2.0.1-1) focal; urgency=medium
 
