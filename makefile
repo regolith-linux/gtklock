@@ -5,16 +5,39 @@
 
 NAME := gtklock
 MAJOR_VERSION := 2
-MINOR_VERSION := 0
+MINOR_VERSION := 1
 MICRO_VERSION := 0
 
 PREFIX?= /usr
+SYSCONFDIR = $(PREFIX)/etc
+
+ifeq '$(shell uname)' 'Linux'
+	SYSCONFDIR = /etc
+endif
+
 INSTALL = install
 
-LIBS := pam wayland-client gtk+-wayland-3.0 gtk-layer-shell-0 gmodule-export-2.0
-CFLAGS += -std=c11 -Iinclude -DPREFIX=$(PREFIX) $(shell pkg-config --cflags $(LIBS))
+LIBS := wayland-client gtk+-wayland-3.0 gtk-layer-shell-0 gmodule-export-2.0
+
+PAMFLAGS := $(shell pkg-config --cflags pam)
+PAMLIBS := $(shell pkg-config --libs pam)
+ifneq '$(.SHELLSTATUS)' '0'
+	PAMLIBS := -lpam
+endif
+
+PKGFLAGS := $(shell pkg-config --cflags $(LIBS))
+ifneq '$(.SHELLSTATUS)' '0'
+	$(error pkg-config failed)
+endif
+
+PKGLIBS := $(shell pkg-config --libs $(LIBS))
+ifneq '$(.SHELLSTATUS)' '0'
+	$(error pkg-config failed)
+endif
+
+CFLAGS += -std=c11 -Iinclude -DPREFIX=$(PREFIX) $(PAMFLAGS) $(PKGFLAGS)
 CFLAGS += -DMAJOR_VERSION=$(MAJOR_VERSION) -DMINOR_VERSION=$(MINOR_VERSION) -DMICRO_VERSION=$(MICRO_VERSION)
-LDLIBS += -Wl,--export-dynamic $(shell pkg-config --libs $(LIBS))
+LDLIBS += -Wl,--export-dynamic $(PAMLIBS) $(PKGLIBS)
 
 OBJ = wlr-input-inhibitor-unstable-v1-client-protocol.o
 OBJ += $(patsubst %.c, %.o, $(wildcard src/*.c))
@@ -37,8 +60,8 @@ install-bin:
 	$(INSTALL) $(NAME) $(DESTDIR)$(PREFIX)/bin/$(NAME)
 
 install-data:
-	$(INSTALL) -d $(DESTDIR)/etc/pam.d
-	$(INSTALL) -m644 pam/$(NAME) $(DESTDIR)/etc/pam.d/$(NAME)
+	$(INSTALL) -d $(DESTDIR)$(SYSCONFDIR)/pam.d
+	$(INSTALL) -m644 pam/$(NAME) $(DESTDIR)$(SYSCONFDIR)/pam.d/$(NAME)
 	$(INSTALL) -d $(DESTDIR)$(PREFIX)/share/man/man1
 	$(INSTALL) -m644 $(NAME).1 $(DESTDIR)$(PREFIX)/share/man/man1/$(NAME).1
 
@@ -46,7 +69,7 @@ install: install-bin install-data
 
 uninstall:
 	rm -f $(DESTDIR)$(PREFIX)/bin/$(NAME)
-	rm -f $(DESTDIR)/etc/pam.d/$(NAME)
+	rm -f $(DESTDIR)$(SYSCONFDIR)/pam.d/$(NAME)
 	rm -r $(DESTDIR)$(PREFIX)/share/man/man1/$(NAME).1
 
 $(NAME): $(OBJ)
