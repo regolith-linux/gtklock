@@ -1,3 +1,13 @@
+gtklock (2.2.0) focal; urgency=medium
+
+  [ Khosrow Moossavi ]
+  * feat: enable github action to test pull requests
+  * feat: enable github action to publish to unstable
+  * feat: enable github action to publish to testing
+  * feat: enable github action to prepare release
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Tue, 28 Jan 2025 14:39:29 -0500
+
 gtklock (2.1.0) focal; urgency=medium
   [ Regolith Linux ]
   * Relax build dep for ubuntu
