@@ -1,3 +1,10 @@
+gtklock (2.2.1) focal; urgency=medium
+
+  [ Khosrow Moossavi ]
+  * fix: create release tag from correct git sha
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Mon, 03 Feb 2025 21:22:43 +0000
+
 gtklock (2.2.0) focal; urgency=medium
 
   [ Khosrow Moossavi ]
