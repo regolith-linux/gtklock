@@ -1,0 +1,2 @@
+# Ignore .github, and local changes to src/auth.c
+extend-diff-ignore = "\.github"
