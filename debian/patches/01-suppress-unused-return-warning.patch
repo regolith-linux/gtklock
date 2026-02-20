@@ -1,0 +1,28 @@
+Description: Suppress compiler warnings about ignoring return values of write and fopen in auth.c
+Author: Soumya Ranjan Patnaik <soumyaranjan1812@gmail.com>
+
+---
+Last-Update: 2026-02-20
+
+--- gtklock-4.0.0.orig/src/auth.c
++++ gtklock-4.0.0/src/auth.c
+@@ -36,8 +36,8 @@ char *auth_get_message(void) {
+
+ static void send_msg(const char *msg, int fd) {
+ 	size_t len = strlen(msg);
+-	write(fd, &len, sizeof(size_t));
+-	write(fd, msg, len);
++	(void)!write(fd, &len, sizeof(size_t));
++	(void)!write(fd, msg, len);
+ }
+
+ static int conversation(
+@@ -133,7 +133,7 @@ enum pwcheck auth_pw_check(const char *s
+ 		else if(pid == 0) {
+ 			close(err_pipe[PIPE_PARENT]);
+ 			close(out_pipe[PIPE_PARENT]);
+-			freopen("/dev/null", "r", stdin);
++			(void)!freopen("/dev/null", "r", stdin);
+ 			auth_child(s, err_pipe, out_pipe);
+ 		}
+ 		close(err_pipe[PIPE_CHILD]);
