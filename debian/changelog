@@ -1,3 +1,51 @@
+gtklock (4.0.0-1) UNRELEASED; urgency=medium
+
+  [ Jovan Lanik ]
+  * add layout loading
+  * Wait for activation before detaching
+  * remove makefile
+  * change build to builddir
+  * split man build into separate file
+  * add header to meson files
+  * initial impl of ext-session-lock
+  * remove idle-inhibitor
+  * exec lock command after locking and creating surfaces
+  * update module support
+  * add monitor priority option
+  * hide cursor when idle
+  * fix regression
+  * update --lock-command
+  * suppress contex menu on entry
+  * update date feature
+  * add follow focus option
+  * add support for translation
+  * add serbian translation
+  * add gtk-session-lock lock signal handlers
+  * exec lock-command only after receiving gtk-session-lock lock signal
+
+  [ Jianhua Lu ]
+  * Introduce meson build system
+  * add .clangd in order to clangd search compile_commands.json under build directory
+
+  [ Zephyr Lykos ]
+  * build: fetch gtk-session-lock as a subproject when not present on system
+  * modules: handle multiarch systems' libdir
+  * auth: guard against race condition with messages
+
+  [ Bhaskar Khoraja ]
+  * feat: date module
+
+  [ Matthias Geiger ]
+  * Added german translation for gtklock
+
+  [ Robin Candau ]
+  * Update installation instructions with the official Arch packages gtklock and all its build dependencies are now in the official Arch [extra] repository. This commit updates the installation instructions accordingly.
+
+  [ Soumya Ranjan Patnaik ]
+  * chore: update package dependencies
+
+ -- Soumya Ranjan Patnaik <soumyaranjan1812@gmail.com>  Fri, 20 Feb 2026 16:28:34 +0530
+
 gtklock (2.2.2) focal; urgency=medium
 
   [ Khosrow Moossavi ]
