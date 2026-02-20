@@ -1,21 +1,21 @@
 // gtklock
-// Copyright (c) 2022 Kenny Levinsen, Jovan Lanik
+// Copyright (c) 2022 Kenny Levinsen, Jovan Lanik, Bhaskar Khoraja
 
 // gtklock application
 
+#include <signal.h>
 #include <gtk/gtk.h>
 
 #include "util.h"
 #include "window.h"
 #include "gtklock.h"
 #include "module.h"
-#include "input-inhibitor.h"
 
 void gtklock_remove_window(struct GtkLock *gtklock, struct Window *win) {
 	for(guint idx = 0; idx < gtklock->windows->len; idx++) {
 		struct Window *ctx = g_array_index(gtklock->windows, struct Window *, idx);
 		if(ctx == win) {
-			g_array_remove_index_fast(gtklock->windows, idx);
+			g_array_remove_index(gtklock->windows, idx);
 			g_free(ctx);
 			return;
 		}
@@ -42,9 +42,23 @@ void gtklock_update_clocks(struct GtkLock *gtklock) {
 	}
 }
 
-static int gtklock_update_clocks_handler(gpointer data) {
+void gtklock_update_dates(struct GtkLock *gtklock) {
+	GDateTime *date = g_date_time_new_now_local();
+	if(date == NULL) return;
+	if(gtklock->date) g_free(gtklock->date);
+	gtklock->date = g_date_time_format(date, gtklock->date_format ? gtklock->date_format : "%a, %b %d");
+	g_date_time_unref(date);
+
+	for(guint idx = 0; idx < gtklock->windows->len; idx++) {
+		struct Window *ctx = g_array_index(gtklock->windows, struct Window *, idx);
+		window_update_date(ctx);
+	}
+}
+
+static int gtklock_update_time_handler(gpointer data) {
 	struct GtkLock *gtklock = (struct GtkLock *)data;
 	gtklock_update_clocks(gtklock);
+	gtklock_update_dates(gtklock);
 	return G_SOURCE_CONTINUE;
 }
 
@@ -82,46 +96,61 @@ void gtklock_idle_show(struct GtkLock *gtklock) {
 	gtklock->idle_hide_source = g_timeout_add_seconds(gtklock->idle_timeout, G_SOURCE_FUNC(gtklock_idle_handler), gtklock);
 }
 
-#if GLIB_CHECK_VERSION(2, 74, 0)
-	#define GTKLOCK_FLAGS G_APPLICATION_DEFAULT_FLAGS
-#else
-	#define GTKLOCK_FLAGS G_APPLICATION_FLAGS_NONE
-#endif
+static void exec_command(const gchar *command) {
+	GError *err = NULL;
+	g_spawn_command_line_async(command, &err);
+	if(err != NULL) {
+		g_warning("Executing `%s` failed: %s", command, err->message);
+		g_error_free(err);
+	}
+}
 
-struct GtkLock* create_gtklock(void) {
-	struct GtkLock *gtklock = g_malloc0(sizeof(struct GtkLock));
-	if(!gtklock) report_error_and_exit("Failed allocation");
-	gtklock->app = gtk_application_new(NULL, GTKLOCK_FLAGS);
-	gtklock->windows = g_array_new(FALSE, TRUE, sizeof(struct Window *));
-	gtklock->messages = g_array_new(FALSE, TRUE, sizeof(char *));
-	gtklock->errors = g_array_new(FALSE, TRUE, sizeof(char *));
-	return gtklock;
+static void locked(GtkSessionLockLock *lock, void *data) {
+	struct GtkLock *gtklock = (struct GtkLock *)data;
+	module_on_locked(gtklock);
+	if(gtklock->parent > 0) kill(gtklock->parent, SIGUSR1);
+	if(gtklock->lock_command) exec_command(gtklock->lock_command);
+	return;
+}
+
+static void finished(GtkSessionLockLock *lock, void *data) {
+	gtk_session_lock_lock_destroy(lock);
+	report_error_and_exit("Failed to lock session");
 }
 
 void gtklock_activate(struct GtkLock *gtklock) {
-	gtklock->draw_clock_source = g_timeout_add(1000, G_SOURCE_FUNC(gtklock_update_clocks_handler), gtklock);
+	g_application_hold(G_APPLICATION(gtklock->app));
+
+	if(!gtk_session_lock_is_supported())
+		report_error_and_exit("Your compositor doesn't support ext-session-lock");
+	gtklock->lock = gtk_session_lock_prepare_lock();
+
+	g_signal_connect(gtklock->lock, "locked", G_CALLBACK(locked), gtklock);
+	g_signal_connect(gtklock->lock, "finished", G_CALLBACK(finished), NULL);
+
+	gtk_session_lock_lock_lock(gtklock->lock);
+
+
+	gtklock->draw_time_source = g_timeout_add(1000, G_SOURCE_FUNC(gtklock_update_time_handler), gtklock);
 	gtklock_update_clocks(gtklock);
+	gtklock_update_dates(gtklock);
 	if(gtklock->use_idle_hide) gtklock->idle_hide_source =
 		g_timeout_add_seconds(gtklock->idle_timeout, G_SOURCE_FUNC(gtklock_idle_handler), gtklock);
-	if(gtklock->use_layer_shell) g_application_hold(G_APPLICATION(gtklock->app));
-	if(gtklock->use_input_inhibit) input_inhibitor_get();
 }
 
 void gtklock_shutdown(struct GtkLock *gtklock) {
-	if(gtklock->draw_clock_source > 0) {
-		g_source_remove(gtklock->draw_clock_source);
-		gtklock->draw_clock_source = 0;
+	if(gtklock->draw_time_source > 0) {
+		g_source_remove(gtklock->draw_time_source);
+		gtklock->draw_time_source = 0;
 	}
 	if(gtklock->idle_hide_source > 0) {
 		g_source_remove(gtklock->idle_hide_source);
 		gtklock->idle_hide_source = 0;
 	}
-	if(gtklock->use_input_inhibit) input_inhibitor_destroy();
-}
 
-void gtklock_destroy(struct GtkLock *gtklock) {
-	g_object_unref(gtklock->app);
-	g_array_unref(gtklock->windows);
-	g_free(gtklock);
+	gtk_session_lock_lock_unlock_and_destroy(gtklock->lock);
+	gdk_display_sync(gdk_display_get_default());
+
+	if(gtklock->unlock_command) exec_command(gtklock->unlock_command);
 }
 
