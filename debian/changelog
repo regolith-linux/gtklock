@@ -1,3 +1,10 @@
+gtklock (2.2.3) focal; urgency=medium
+
+  [ rego-port-bot ]
+  * fix(auth): cap PAM messages and send each in one write
+
+ -- Regolith Linux <regolith.linux@gmail.com>  Sat, 14 Nov 2026 11:01:01 -0800
+
 gtklock (2.2.2) focal; urgency=medium
 
   [ Khosrow Moossavi ]
