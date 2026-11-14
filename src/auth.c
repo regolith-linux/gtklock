@@ -6,6 +6,7 @@
 #define _POSIX_C_SOURCE 200809L
 
 #include <stdio.h>
+#include <string.h>
 #include <unistd.h>
 #include <pwd.h>
 #include <fcntl.h>
@@ -34,10 +35,15 @@ char *auth_get_message(void) {
 	return s;
 }
 
+// Messages are cut to fewer than PAM_MAX_MSG_SIZE bytes and sent with the
+// length in one write, which is atomic for a pipe (well under PIPE_BUF), so the
+// parent never reads half a message or takes message text for a length.
 static void send_msg(const char *msg, int fd) {
-	size_t len = strlen(msg);
-	(void)!write(fd, &len, sizeof(size_t));
-	(void)!write(fd, msg, len);
+	char buf[sizeof(size_t) + PAM_MAX_MSG_SIZE];
+	size_t len = strnlen(msg, PAM_MAX_MSG_SIZE - 1);
+	memcpy(buf, &len, sizeof(size_t));
+	memcpy(buf + sizeof(size_t), msg, len);
+	(void)!write(fd, buf, sizeof(size_t) + len);
 }
 
 static int conversation(
@@ -148,17 +154,19 @@ enum pwcheck auth_pw_check(const char *s) {
 	size_t len;
 	ssize_t nread;
 	nread = read(err_pipe[PIPE_PARENT], &len, sizeof(size_t));
-	if(nread > 0) {
-		error_string = malloc(len+1);
+	if(nread == (ssize_t)sizeof(size_t) && len < PAM_MAX_MSG_SIZE) {
+		error_string = malloc(PAM_MAX_MSG_SIZE);
+		if(error_string == NULL) return PW_WAIT;
 		nread = read(err_pipe[PIPE_PARENT], error_string, len);
-		error_string[nread] = '\0';
+		error_string[nread > 0 ? nread : 0] = '\0';
 		return PW_ERROR;
 	}
 	nread = read(out_pipe[PIPE_PARENT], &len, sizeof(size_t));
-	if(nread > 0) {
-		message_string = malloc(len+1);
+	if(nread == (ssize_t)sizeof(size_t) && len < PAM_MAX_MSG_SIZE) {
+		message_string = malloc(PAM_MAX_MSG_SIZE);
+		if(message_string == NULL) return PW_WAIT;
 		nread = read(out_pipe[PIPE_PARENT], message_string, len);
-		message_string[nread] = '\0';
+		message_string[nread > 0 ? nread : 0] = '\0';
 		return PW_MESSAGE;
 	}
 
